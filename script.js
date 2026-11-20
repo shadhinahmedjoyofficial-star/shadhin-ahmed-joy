@@ -14,14 +14,8 @@
   const has = (v) => typeof v === "string" && v.trim() !== "";
   const clear = (n) => { while (n.firstChild) n.removeChild(n.firstChild); return n; };
 
-  const links = () => {
-    const s = d.social, out = [];
-    if (has(s.linkedin)) out.push(["LinkedIn", s.linkedin]);
-    if (has(s.facebook)) out.push(["Facebook", s.facebook]);
-    if (has(s.instagram)) out.push(["Instagram", s.instagram]);
-    if (has(s.github)) out.push(["GitHub", s.github]);
-    return out;
-  };
+  const ch = (t) => ((d.contact.channels.find((c) => c.type === t) || {}).value || "").trim();
+  const links = () => [["LinkedIn", "linkedin"], ["Facebook", "facebook"]].filter(([, t]) => has(ch(t))).map(([n, t]) => [n, ch(t)]);
 
   function renderMeta() {
     const p = d.personal;
@@ -49,7 +43,7 @@
       h("div", { cls: "btns" }, [
         h("a", { cls: "btn btn-primary", href: "#projects", text: "View My Work" }),
         h("a", { cls: "btn btn-ghost", href: "#contact", text: "Let’s Connect" }),
-        has(d.social.linkedin) && h("a", { cls: "btn btn-ghost", href: d.social.linkedin, text: "LinkedIn" }),
+        has(ch("linkedin")) && h("a", { cls: "btn btn-ghost", href: ch("linkedin"), text: "LinkedIn" }),
         has(p.resumeLink) && h("a", { cls: "btn btn-ghost", href: p.resumeLink, text: "Résumé" })
       ])
     ]);
@@ -126,18 +120,56 @@
     });
   }
 
+  const svg = (p) => '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
+  const ICONS = {
+    email: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>'),
+    whatsapp: svg('<path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3L3 21z"/><path d="M9 9c0 3.200 2.800 6 6 6l1-1.600-2-1-1 .8a4 4 0 0 1-1.800-1.800l.8-1-1-2z"/>'),
+    linkedin: svg('<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 11v6M8 7.500v.01M12 17v-6m0 3a3 3 0 0 1 6 0v3"/>'),
+    facebook: svg('<path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8.500a.5.5 0 0 1 .5-.5z"/>'),
+    phone: svg('<path d="M5 4h4l2 5-2.500 1.500a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>')
+  };
+
+  let toastTimer;
+  function toast(msg) {
+    let t = $("toast");
+    if (!t) { t = h("div", { cls: "toast", attrs: { id: "toast", role: "status", "aria-live": "polite" } }); document.body.appendChild(t); }
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+  async function copyText(v) {
+    try { await navigator.clipboard.writeText(v); }
+    catch (e) {
+      const ta = h("textarea", { attrs: { readonly: "", style: "position:fixed;opacity:0" } });
+      ta.value = v; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (_) {}
+      ta.remove();
+    }
+    toast("Phone number copied: " + v);
+  }
+
+  function channelNode(c) {
+    const v = (c.value || "").trim();
+    if (!v) return null;
+    const label = c.type === "phone" ? "Copy phone number " + v : c.label;
+    const base = { cls: "icon-btn", attrs: { "aria-label": label, title: label } };
+    let n;
+    if (c.type === "phone") {
+      n = h("button", { ...base, attrs: { ...base.attrs, type: "button" } });
+      n.addEventListener("click", () => copyText(v));
+    } else {
+      const href = c.type === "email" ? "mailto:" + v : c.type === "whatsapp" ? "https://wa.me/" + v.replace(/\D/g, "") : v;
+      n = h("a", { ...base, href });
+    }
+    n.innerHTML = ICONS[c.type] || "";
+    return n;
+  }
+
   function renderContact() {
-    const c = d.contact, s = d.social, box = clear($("contactInner"));
-    const email = c.email || s.email, phone = c.phone || s.phone, wa = c.whatsapp || s.whatsapp;
-    const rows = [];
-    if (has(email)) rows.push(["Email", email, "mailto:" + email]);
-    if (has(wa)) rows.push(["WhatsApp", wa, "https://wa.me/" + wa.replace(/\D/g, "")]);
-    if (has(phone)) rows.push(["Phone", phone, "tel:" + phone.replace(/\s/g, "")]);
-    links().forEach(([n, u]) => rows.push([n, u.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, ""), u]));
+    const c = d.contact, box = clear($("contactInner"));
     box.appendChild(h("div", { cls: "contact-inner" }, [
       h("h2", { text: c.heading }),
       h("p", { text: c.description }),
-      h("div", { cls: "contacts" }, rows.map(([l, t, href]) => h("a", { href, attrs: {} }, [h("span", { text: l }), document.createTextNode(t)])))
+      h("div", { cls: "icon-row" }, c.channels.map(channelNode))
     ]));
   }
 
@@ -180,4 +212,6 @@
   renderMeta(); renderNav(); renderHero(); renderAbout(); renderEducation();
   renderSkills(); renderExperience(); renderProjects(); renderContact(); renderFooter();
   initMenu(); initObservers();
+  const onScroll = () => $("nav").classList.toggle("scrolled", window.scrollY > 8);
+  window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
 })();

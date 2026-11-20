@@ -15,15 +15,6 @@ const portfolioData = {
     profileImage: "",
     resumeLink: ""
   },
-  social: {
-    linkedin: "https://www.linkedin.com/in/md-shadhin-ahmed-joy-988189237/",
-    facebook: "https://www.facebook.com/shadhinahmedjoy",
-    instagram: "",
-    github: "",
-    whatsapp: "",
-    email: "",
-    phone: ""
-  },
   education: [
     {
       institution: "Jagannath University, Dhaka",
@@ -100,8 +91,14 @@ const portfolioData = {
   contact: {
     heading: "Have a project in mind?",
     description: "Let’s discuss how we can work together.",
-    email: "",
-    phone: "",
-    whatsapp: ""
+    // Icon-only links, shown in this order. Empty value = icon hidden.
+    // email: address | whatsapp: number with country code | phone: copied on click
+    channels: [
+      { type: "email",    label: "Email",    value: "" },
+      { type: "whatsapp", label: "WhatsApp", value: "" },
+      { type: "linkedin", label: "LinkedIn", value: "https://www.linkedin.com/in/md-shadhin-ahmed-joy-988189237/" },
+      { type: "facebook", label: "Facebook", value: "https://www.facebook.com/shadhinahmedjoy" },
+      { type: "phone",    label: "Call",     value: "" }
+    ]
   }
 };
