@@ -94,11 +94,11 @@ const portfolioData = {
     // Icon-only links, shown in this order. Empty value = icon hidden.
     // email: address | whatsapp: number with country code | phone: copied on click
     channels: [
-      { type: "email",    label: "Email",    value: "" },
-      { type: "whatsapp", label: "WhatsApp", value: "" },
+      { type: "email",    label: "Email",    value: "shadhinahmedjoy.official@gmail.com" },
+      { type: "whatsapp", label: "WhatsApp", value: "+8801405786158" },
       { type: "linkedin", label: "LinkedIn", value: "https://www.linkedin.com/in/md-shadhin-ahmed-joy-988189237/" },
       { type: "facebook", label: "Facebook", value: "https://www.facebook.com/shadhinahmedjoy" },
-      { type: "phone",    label: "Call",     value: "" }
+      { type: "phone",    label: "Call",     value: "+8801405786158" }
     ]
   }
 };
